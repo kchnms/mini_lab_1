@@ -41,6 +41,9 @@ class Entries:
         self.entries_list.append(new_entry)
     
     def destroy_entry(self):
+        entry_to_delete = self.parent_window.focus_get()    
+        if entry_to_delete not in self.entries_list:
+            return
         def is_not_blank(s):
             return bool(s and not s.isspace())
         if len(self.entries_list) == 0:
@@ -49,7 +52,7 @@ class Entries:
             mw.add_button(ok_button)
             return self
         
-        entry_data =  self.entries_list[-1].get()
+        entry_data =  entry_to_delete.get()
         if is_not_blank(entry_data):
             mw = ModalWindow(self.parent_window, title='Удаление непустой строки', labeltext='Уверены?')
             ok_button = Button(master=mw.top, text='Да', command=mw.sure_to_delete)
@@ -59,15 +62,15 @@ class Entries:
             to_del = mw.ans()
             if to_del:
                 mw.to_delete = False
-                self.entries_list[-1].destroy()
-                self.entries_list.pop()
+                entry_to_delete.destroy()
+                self.entries_list.remove(entry_to_delete)
                 plot_button = self.parent_window.get_button_by_name('plot')
                 if plot_button:
                     plot_button.pack_forget()
                 self.parent_window.add_button('plot', 'Plot', 'plot', hot_key='<Return>')
         else:
-            self.entries_list[-1].destroy()
-            self.entries_list.pop()
+            entry_to_delete.destroy()
+            self.entries_list.remove(entry_to_delete)
             plot_button = self.parent_window.get_button_by_name('plot')
             if plot_button:
                 plot_button.pack_forget()
@@ -136,19 +139,19 @@ class Commands:
 
     def upload_from_file(self):
             file_in = filedialog.askopenfile()
-            list_of_functions = json.load(file_in)
-            figure = self.parent_window.plotter.plot(list_of_functions.get("list_of_function"))
-            self._state.figure = figure
-            self.__forget_canvas()
-            self.__figure_canvas = FigureCanvasTkAgg(figure, self.parent_window)
-            self.__forget_navigation()
-            self.__navigation_toolbar = NavigationToolbar2Tk(self.__figure_canvas, self.parent_window)
-            self.__figure_canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
-            plot_button = self.parent_window.get_button_by_name('plot')
-            if plot_button:
-                plot_button.pack_forget()
+            if file_in is not None:
+                list_of_functions = json.load(file_in)
+                figure = self.parent_window.plotter.plot(list_of_functions.get("list_of_function"))
+                self._state.figure = figure
+                self.__forget_canvas()
+                self.__figure_canvas = FigureCanvasTkAgg(figure, self.parent_window)
+                self.__forget_navigation()
+                self.__navigation_toolbar = NavigationToolbar2Tk(self.__figure_canvas, self.parent_window)
+                self.__figure_canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
+                plot_button = self.parent_window.get_button_by_name('plot')
+                if plot_button:
+                    plot_button.pack_forget()
             return self
-        
     def set_parent_window(self, parent_window):
         self.parent_window = parent_window
 
