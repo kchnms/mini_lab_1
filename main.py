@@ -29,8 +29,9 @@ class Entries:
         self.parent_window = parent_window
 
     # adding of new entry (добавление нового текстового поля)
-    def add_entry(self):
+    def add_entry(self, func):
         new_entry = Entry(self.parent_window)
+        new_entry.insert(0, func)
         new_entry.icursor(0)
         new_entry.focus()
         new_entry.pack()
@@ -75,6 +76,11 @@ class Entries:
             if plot_button:
                 plot_button.pack_forget()
             self.parent_window.add_button('plot', 'Plot', 'plot', hot_key='<Return>')
+            
+    def reset_list(self):
+        for entry in self.entries_list:
+            entry.pack_forget()
+        self.entries_list.clear()
 
 
 # class for plotting (класс для построения графиков)
@@ -125,10 +131,8 @@ class Commands:
                 json.dump(tmp_dict, file_out)
             return self
         
-        
         def reset_state(self):
             self.list_of_function = []
-
     def __init__(self):
         self.command_dict = {}
         self.__figure_canvas = None
@@ -136,11 +140,16 @@ class Commands:
         self._state = Commands.State()
         self.__empty_entry_counter = 0
         self.parent_window = None
-
+    
     def upload_from_file(self):
             file_in = filedialog.askopenfile()
             if file_in is not None:
                 list_of_functions = json.load(file_in)
+                funcs = list_of_functions["list_of_function"]
+                entries = self.parent_window.entries
+                entries.reset_list()
+                for func in funcs:
+                    entries.add_entry(func)
                 figure = self.parent_window.plotter.plot(list_of_functions.get("list_of_function"))
                 self._state.figure = figure
                 self.__forget_canvas()
@@ -205,7 +214,7 @@ class Commands:
     def add_func(self, *args, **kwargs):
         self.__forget_canvas()
         self.__forget_navigation()
-        self.parent_window.entries.add_entry()
+        self.parent_window.entries.add_entry("")
 
     def del_func(self, *args, **kwargs):
         self.__forget_canvas()
@@ -328,7 +337,7 @@ if __name__ == "__main__":
     app.add_button('add_func', 'Добавить функцию', 'add_func', hot_key='<Control-a>')
     app.add_button('del_func', 'Удалить функцию', 'del_func', hot_key='<Control-d>')
     # init first entry (создаем первое поле ввода)
-    entries_main.add_entry()
+    entries_main.add_entry("")
     app.create_menu()
     # добавил комментарий для коммита
     # application launch (запуск "вечного" цикла приложеня)
